@@ -1,13 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { Send, Info, CalendarPlus, ShieldCheck, Megaphone, MessageSquareText } from 'lucide-react';
 import axios from 'axios';
-
 import config from '../../../config';
 import toast from 'react-hot-toast';
 import GroupInfo from './GroupInfo';
-
 import { io } from 'socket.io-client';
-import { useUser } from '../utils/dataQuery';
+import { useUserData } from '../utils/dataQuery';
 import { useNavigate } from 'react-router-dom';
 import { formatTime } from '../../../utils/helperFunctions';
 import Loader from '../../../ui/Loader';
@@ -19,40 +17,39 @@ const Community = () => {
     const [isGroupInfoOpen, setIsGroupInfoOpen] = useState(false);
     const [groupInfo, setGroupInfo] = useState({});
     const messagesEndRef = useRef(null);
-    const { data: user } = useUser();
+    const { data: userData } = useUserData();
     const socketRef = useRef(null);
-    const navigate = useNavigate()
-    const [localCounter, setLocalCounter] = useState(0)
+    const navigate = useNavigate();
 
     useEffect(() => {
-        if (!user) return;
+        if (!userData) return;
         const fetchHistoryAndGroupInfo = async () => {
             setIsLoading(true);
             try {
-                const response = await axios.get(`${config.API_URL}/api/chat/history`, {
+                const response = await axios.get(`${config.API_URL}/api/community/fetchCommunityData`, {
                     withCredentials: true,
                 });
                 const { status, message, chatHistory, groupInfo } = response.data;
                 if (status) {
                     setMessages(chatHistory);
-                    setGroupInfo(groupInfo)
+                    setGroupInfo(groupInfo);
                 } else {
                     toast.error(message);
                 }
             } catch (error) {
-                console.log(error.message)
-                toast.error("Server request failed. Please retry.")
+                console.log(error.message);
+                toast.error("Server request failed. Please retry.");
             } finally {
                 setIsLoading(false);
             }
         };
         fetchHistoryAndGroupInfo();
-    }, [user]);
+    }, [userData]);
 
     useEffect(() => {
-        if (!user || !user.groupId) return;
+        if (!userData || !userData.group_id) return;
         socketRef.current = io('http://localhost:3000/community', {
-            auth: { group_id: user.groupId },
+            auth: { group_id: userData.group_id, user_id: userData.id, full_name: userData.full_name },
         });
         socketRef.current.on('newMessage', (incomingMessage) => {
             setMessages((prevMessages) => [...prevMessages, incomingMessage]);
@@ -63,7 +60,7 @@ const Community = () => {
                 socketRef.current.disconnect();
             }
         };
-    }, [user]);
+    }, [userData]);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -72,14 +69,12 @@ const Community = () => {
     const handleSendMessage = (e) => {
         e.preventDefault();
         if (newMessage.trim() === '') return;
-        setLocalCounter(p => p + 1)
+        
         const messageData = {
-            groupId: user.groupId,
-            senderId: user._id,
             message: newMessage,
-            timestamp: new Date(),
-            senderName: user.personalInfo.name,
-            messageType: 'user'
+            created_at: new Date(),
+            messageType: 'user',
+            is_admin_message: false
         };
 
         socketRef.current.emit('sendMessage', messageData, (response) => {
@@ -90,9 +85,6 @@ const Community = () => {
             }
         });
     };
-
-
-
 
     return (
         <>
@@ -140,7 +132,7 @@ const Community = () => {
                         messages.map((msg) => {
                             if (msg.messageType === 'system') {
                                 return (
-                                    <div key={msg._id} className="my-4 rounded-lg border border-sky-800/50 bg-neutral-700/30 p-4 text-center">
+                                    <div key={msg.id} className="my-4 rounded-lg border border-sky-800/50 bg-neutral-700/30 p-4 text-center">
                                         <div className="flex w-fit mx-auto items-center gap-2 rounded-full bg-sky-900/50 px-3 py-1 text-xs text-sky-300">
                                             <Megaphone size={14} />
                                             <span>Event Alert</span>
@@ -156,11 +148,11 @@ const Community = () => {
                                     </div>
                                 );
                             } else {
-                                const isSentByCurrentUser = msg.senderId === user?._id;
+                                const isSentByCurrentUser = msg.sender_id === userData?.id;
                                 const isAdminMessage = msg.messageType === 'admin';
                                 return (
                                     <div
-                                        key={msg._id || localCounter}
+                                        key={msg.id}
                                         className={`flex items-end gap-3 my-2 ${isSentByCurrentUser ? 'justify-end' : 'justify-start'}`}
                                     >
                                         <div
@@ -187,7 +179,7 @@ const Community = () => {
                                                     : 'text-gray-400 dark:text-neutral-400'
                                                     }`}
                                             >
-                                                {formatTime(msg.timestamp)}
+                                                {formatTime(msg.created_at)}
                                             </p>
                                         </div>
                                     </div>
@@ -227,4 +219,4 @@ const Community = () => {
     );
 };
 
-export default Community
+export default Community;

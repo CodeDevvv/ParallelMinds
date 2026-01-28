@@ -18,7 +18,7 @@ const UserAccountManager = () => {
 
     const [filters, setFilters] = useState({ sort: 'new' });
     const [searchQuery, setSearchQuery] = useState('');
-    const [searchType, setSearchType] = useState('personalInfo.name');
+    const [searchType, setSearchType] = useState('full_name');
 
     const [currentPage, setCurrentPage] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
@@ -79,7 +79,7 @@ const UserAccountManager = () => {
         setFilters({ sort: 'new' })
         setSearchQuery('')
         setCurrentPage(1)
-        setSearchType('personalInfo.name')
+        setSearchType('full_name')
         setShowClear(false)
     }
 
@@ -170,7 +170,7 @@ const UserAccountManager = () => {
             {users.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {users.map((user) =>
-                        <UserCard key={user._id} user={user} setIsOpen={() => setIsOpen(true)} setUser={(user) => setUser(user)} />
+                        <UserCard key={user.id} user={user} setIsOpen={() => setIsOpen(true)} setUser={(user) => setUser(user)} />
                     )}
                 </div>
             ) : (

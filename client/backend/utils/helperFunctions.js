@@ -1,17 +1,17 @@
-export function getPHQ9Category(score) {
-    if (score >= 0 && score <= 4) return 'None-Minimal';
-    if (score <= 9) return "Mild"
-    if (score <= 14) return 'Moderate'
-    if (score <= 19) return 'Moderately severe'
-    return 'Severe'
-}
+export const getPHQ9Category = (score) => {
+    if (score >= 20) return 'Severe';
+    if (score >= 15) return 'Moderately severe';
+    if (score >= 10) return 'Moderate';
+    if (score >= 5)  return 'Mild';
+    return 'None-Minimal';
+};
 
-export function getGAD7Category(score) {
-    if (score >= 0 && score <= 4) return 'None-Minimal';
-    if (score <= 9) return "Mild"
-    if (score <= 14) return 'Moderate'
-    return 'Severe'
-}
+export const getGAD7Category = (score) => {
+    if (score >= 15) return 'Severe';
+    if (score >= 10) return 'Moderate';
+    if (score >= 5)  return 'Mild';
+    return 'None-Minimal';
+};
 
 export function normalizeScore(score, max_score) {
     return max_score > 0 ? Math.round((score / max_score) * 100) / 100 : 0;

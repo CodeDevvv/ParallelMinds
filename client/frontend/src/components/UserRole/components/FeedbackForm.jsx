@@ -19,8 +19,9 @@ const FeedbackForm = ({ isOpen, onClose, eventId, submitted }) => {
             return;
         }
         const feedback = {
-            rating, comment,
-            event: eventId
+            rating,
+            comment,
+            eventId
         }
         try {
             const response = await axios.post(`${config.API_URL}/api/user/submitFeedback`, feedback, {

@@ -11,43 +11,74 @@ import config from '../../config';
 import Loader from '../../ui/Loader';
 import FullScreenLoader from '../../ui/FullScreenLoader';
 
+// 1. Add this helper function at the top of your component (or outside it)
+const formatSeverity = (data) => {
+    // Case A: It's null or undefined
+    if (!data) return 'Any';
+
+    // Case B: It's a String (The cause of your crash)
+    // We wrap it in an array so we can process it uniformly
+    const arrayData = Array.isArray(data) ? data : [data];
+
+    if (arrayData.length === 0) return 'Any';
+
+    // Case C: It's an Array -> Format it nicely
+    return arrayData
+        .map(s => {
+            if (typeof s !== 'string') return ''; // Safety check
+            return s.replace(/_/g, ' ') // "moderately_severe" -> "moderately severe"
+                .replace(/\b\w/g, c => c.toUpperCase()); // -> "Moderately Severe"
+        })
+        .join(', ');
+};
+
 const EventDetailsModal = ({ isOpen, onClose, event }) => {
     const [activeTab, setActiveTab] = useState('audience');
-    const [feedbacks, setFeedbacks] = useState([])
-    const [isLoading, setIsLoading] = useState(false)
+    const [feedbacks, setFeedbacks] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
+        setFeedbacks([]);
+
         const fetchEventFeedback = async () => {
-            setIsLoading(true)
+            if (!event?.id) return;
+
+            setIsLoading(true);
             try {
-                const res = await axios.get(`${config.API_URL}/fetchEventFeedback?eventId=${event._id}`)
-                if (res.data.feedbacks.length !== 0) {
-                    setFeedbacks(res.data.feedbacks)
+                const res = await axios.get(`${config.API_URL}/fetchEventFeedback?eventId=${event.id}`);
+                if (res.data.feedbacks && res.data.feedbacks.length > 0) {
+                    setFeedbacks(res.data.feedbacks);
                 }
             } catch (error) {
-                console.log(error.message)
-                toast.error("Server request failed. Please retry.")
+                console.log(error.message);
+                toast.error("Server request failed. Please retry.");
             } finally {
-                setIsLoading(false)
+                setIsLoading(false);
             }
+        };
+
+        if (activeTab === 'feedback' && isOpen) {
+            fetchEventFeedback();
         }
-        if (activeTab === 'feedback') {
-            fetchEventFeedback()
-        }
-    }, [activeTab, event])
+    }, [activeTab, event, isOpen]);
 
     if (!isOpen || !event) return null;
 
-    const formatDate = (dateString) => new Date(dateString).toLocaleDateString('en-IN', {
-        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-    });
-    const formatTime = (dateString) => new Date(dateString).toLocaleTimeString('en-IN', {
-        hour: 'numeric', minute: '2-digit', hour12: true
-    });
+    const formatDate = (dateString) => {
+        if (!dateString) return 'Date N/A';
+        const date = new Date(dateString);
+        return isNaN(date.getTime()) ? 'Invalid Date' : date.toLocaleString('en-IN', { dateStyle: 'medium' });
+    };
+
+    const formatTime = (dateString) => {
+        if (!dateString) return 'Time N/A';
+        const date = new Date(dateString);
+        return isNaN(date.getTime()) ? 'Invalid Time' : date.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' });
+    };
 
     const handleTabChange = (tab) => {
-        setActiveTab(tab)
-    }
+        setActiveTab(tab);
+    };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" onClick={onClose}>
@@ -57,122 +88,138 @@ const EventDetailsModal = ({ isOpen, onClose, event }) => {
                         <X size={20} />
                     </button>
                     <h2 className="text-2xl font-bold pr-8">{event.title}</h2>
-                    <span className="rounded-full bg-sky-900/70 px-3 py-1 text-xs font-semibold text-sky-300 mt-2 inline-block">
-                        {event.eventType}
+                    <span className="rounded-full bg-sky-900/70 px-3 py-1 text-xs font-semibold text-sky-300 mt-2 inline-block capitalize">
+                        {event.event_type?.replace('_', ' ') || 'Event'}
                     </span>
                 </header>
 
-                {
-                    isLoading ? <FullScreenLoader message={"Fecthing Event Details...."} />
-                        :
-                        (<main className="flex-1 overflow-y-auto p-6">
-                            <section className="mb-6">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                                    <DetailItem icon={Calendar} label="Date" value={formatDate(event.startDateTime)} />
-                                    <DetailItem icon={Clock} label="Time" value={formatTime(event.startDateTime)} />
-                                    <DetailItem icon={MapPin} label="Location" value={event.address} />
-                                    <DetailItem icon={Users} label="Capacity" value={`${event.attendees.users.length} / ${event.capacity}`} />
-                                </div>
-                                <div className="grid grid-cols-2 pl-4 mt-6 border-t border-neutral-700/60 pt-6">
-                                    <div>
-                                        <h3 className="font-semibold text-neutral-200 mb-2">Event Id</h3>
-                                        <p className="text-neutral-400 text-sm leading-relaxed">
-                                            {event._id || 'No description provided.'}
-                                        </p>
-                                    </div>
-
-                                    <div>
-                                        <h3 className="font-semibold text-neutral-200 mb-2">Description</h3>
-                                        <p className="text-neutral-400 text-sm leading-relaxed">
-                                            {event.description || 'No description provided.'}
-                                        </p>
-                                    </div>
+                {isLoading && activeTab === 'feedback' && feedbacks.length === 0 ? (
+                    <div className="p-10">
+                        <FullScreenLoader message={"Fetching details..."} />
+                    </div>
+                ) : (
+                    <main className="flex-1 overflow-y-auto p-6">
+                        <section className="mb-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                                <DetailItem icon={Calendar} label="Date" value={formatDate(event.start_date_time)} />
+                                <DetailItem icon={Clock} label="Time" value={formatTime(event.start_date_time)} />
+                                <DetailItem icon={MapPin} label="Location" value={event.address || 'Online'} />
+                                <DetailItem icon={Users} label="Capacity" value={`${event.attendees?.users?.length || 0} / ${event.capacity}`} />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pl-0 md:pl-4 mt-6 border-t border-neutral-700/60 pt-6">
+                                <div>
+                                    <h3 className="font-semibold text-neutral-200 mb-2">Event ID</h3>
+                                    <p className="text-neutral-400 text-xs font-mono bg-neutral-900/50 p-2 rounded w-fit">
+                                        {event.id}
+                                    </p>
                                 </div>
 
-                            </section>
+                                <div>
+                                    <h3 className="font-semibold text-neutral-200 mb-2">Description</h3>
+                                    <p className="text-neutral-400 text-sm leading-relaxed">
+                                        {event.description || 'No description provided.'}
+                                    </p>
+                                </div>
+                            </div>
+                        </section>
 
-                            <section>
-                                <nav className="flex border-b border-neutral-700">
-                                    <button onClick={() => handleTabChange('audience')} className={`px-4 py-2 text-sm font-medium ${activeTab === 'audience' ? 'border-b-2 border-sky-500 text-sky-400' : 'text-neutral-400 hover:text-white'}`}>
-                                        Target Audience
-                                    </button>
-                                    <button onClick={() => handleTabChange('attendees')} className={`px-4 py-2 text-sm font-medium ${activeTab === 'attendees' ? 'border-b-2 border-sky-500 text-sky-400' : 'text-neutral-400 hover:text-white'}`}>
-                                        Attendees
-                                    </button>
-                                    <button onClick={() => handleTabChange('feedback')} className={`px-4 py-2 text-sm font-medium ${activeTab === 'feedback' ? 'border-b-2 border-sky-500 text-sky-400' : 'text-neutral-400 hover:text-white'}`}>
-                                        Feedbacks
-                                    </button>
-                                </nav>
+                        <section>
+                            <nav className="flex border-b border-neutral-700 overflow-x-auto">
+                                <button onClick={() => handleTabChange('audience')} className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${activeTab === 'audience' ? 'border-b-2 border-sky-500 text-sky-400' : 'text-neutral-400 hover:text-white'}`}>
+                                    Target Audience
+                                </button>
+                                <button onClick={() => handleTabChange('attendees')} className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${activeTab === 'attendees' ? 'border-b-2 border-sky-500 text-sky-400' : 'text-neutral-400 hover:text-white'}`}>
+                                    Attendees
+                                </button>
+                                <button onClick={() => handleTabChange('feedback')} className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${activeTab === 'feedback' ? 'border-b-2 border-sky-500 text-sky-400' : 'text-neutral-400 hover:text-white'}`}>
+                                    Feedback
+                                </button>
+                            </nav>
 
-                                <div className="py-6">
-                                    {activeTab === 'audience' && (
-                                        <div className="rounded-lg bg-neutral-700/30 p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <DetailItem icon={Tag} label="Interests" value={<TagList items={event.targetInterests} />} />
-                                            <DetailItem icon={HeartPulse} label="PHQ-9 / GAD-7 Severity" value={`${event.targetPHQ9Severity} / ${event.targetGAD7Severity}`} />
-                                        </div>
-                                    )}
-                                    {activeTab === 'attendees' && (
-                                        <div className="rounded-lg bg-neutral-700/30 p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <AttendeeList title="Registered Users" attendees={event.attendees.users} icon={User} />
-                                            <AttendeeList title="Attending Doctors" attendees={event.attendees.doctors} icon={Stethoscope} />
-                                        </div>
-                                    )}
-                                    {activeTab === 'feedback' && (
-                                        <div className="rounded-lg bg-neutral-700/30 p-4">
-                                            {
-                                                isLoading ? <Loader /> :
-                                                    !feedbacks || feedbacks.length === 0 ? (
-                                                        <div className="text-center py-16">
-                                                            <MessageSquare size={48} className="mx-auto text-neutral-600" />
-                                                            <h3 className="mt-4 text-lg font-semibold text-neutral-200">No Feedback Yet</h3>
-                                                            <p className="mt-1 text-sm text-neutral-400">User feedback for this event will appear here.</p>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="space-y-6">
-                                                            {feedbacks.map((item) => (
-                                                                <div key={item._id} className="bg-neutral-800/50 border border-neutral-700 rounded-lg p-4">
-                                                                    <div className="flex justify-between items-start mb-3">
-                                                                        <div>
-                                                                            <p className="text-sm text-neutral-400">
-                                                                                Submitted by <span className="font-medium text-sky-400">{item.user || 'A user'}</span>
-                                                                            </p>
-                                                                        </div>
-                                                                        <p className="text-xs text-neutral-500 flex-shrink-0 ml-4">
-                                                                            {formatDate(item.createdAt)}
-                                                                        </p>
-                                                                    </div>
+                            <div className="py-6">
+                                {activeTab === 'audience' && (
+                                    <div className="rounded-lg bg-neutral-700/30 p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                                                                    <div className="space-y-3">
-                                                                        <div className="flex items-center gap-1">
-                                                                            {[1, 2, 3, 4, 5].map((star) => (
-                                                                                <Star
-                                                                                    key={star}
-                                                                                    size={16}
-                                                                                    className={item.rating >= star ? 'text-amber-400 fill-amber-400' : 'text-neutral-600'}
-                                                                                />
-                                                                            ))}
-                                                                        </div>
+                                        <DetailItem
+                                            icon={Tag}
+                                            label="Interests"
+                                            value={<TagList items={Array.isArray(event.target_interests) ? event.target_interests : []} />}
+                                        />
 
-                                                                        {item.comment ? (
-                                                                            <p className="text-sm text-neutral-300 bg-neutral-900/50 rounded-md p-3">
-                                                                                "{item.comment}"
-                                                                            </p>
-                                                                        ) : (
-                                                                            <p className="text-sm text-neutral-500 italic">No comment provided.</p>
-                                                                        )}
-                                                                    </div>
+                                        <DetailItem
+                                            icon={HeartPulse}
+                                            label="PHQ-9 / GAD-7 Severity"
+                                            value={`${formatSeverity(event.target_phq_severity)} / ${formatSeverity(event.target_gad_severity)}`}
+                                        />
+
+                                        <DetailItem
+                                            icon={Target}
+                                            label="Life Transitions"
+                                            value={<TagList items={Array.isArray(event.target_life_transitions) ? event.target_life_transitions : []} />}
+                                        />
+
+                                    </div>
+                                )}
+                                {activeTab === 'attendees' && (
+                                    <div className="rounded-lg bg-neutral-700/30 p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <AttendeeList title="Registered Users" attendees={event.attendees?.users || []} icon={User} />
+                                        <AttendeeList title="Attending Doctors" attendees={event.attendees?.doctors || []} icon={Stethoscope} />
+                                    </div>
+                                )}
+                                {activeTab === 'feedback' && (
+                                    <div className="rounded-lg bg-neutral-700/30 p-4">
+                                        {isLoading ? <Loader /> :
+                                            !feedbacks || feedbacks.length === 0 ? (
+                                                <div className="text-center py-16">
+                                                    <MessageSquare size={48} className="mx-auto text-neutral-600" />
+                                                    <h3 className="mt-4 text-lg font-semibold text-neutral-200">No Feedback Yet</h3>
+                                                    <p className="mt-1 text-sm text-neutral-400">User feedback for this event will appear here.</p>
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-6">
+                                                    {feedbacks.map((item) => (
+                                                        <div key={item.id || item._id} className="bg-neutral-800/50 border border-neutral-700 rounded-lg p-4">
+                                                            <div className="flex justify-between items-start mb-3">
+                                                                <div>
+                                                                    <p className="text-sm text-neutral-400">
+                                                                        Submitted by <span className="font-medium text-sky-400">{item.user_name || item.user || 'Anonymous'}</span>
+                                                                    </p>
                                                                 </div>
-                                                            ))}
-                                                        </div>
-                                                    )
-                                            }
-                                        </div>
-                                    )}
-                                </div>
-                            </section>
-                        </main>)
+                                                                <p className="text-xs text-neutral-500 flex-shrink-0 ml-4">
+                                                                    {formatDate(item.created_at || item.createdAt)}
+                                                                </p>
+                                                            </div>
 
-                }
+                                                            <div className="space-y-3">
+                                                                <div className="flex items-center gap-1">
+                                                                    {[1, 2, 3, 4, 5].map((star) => (
+                                                                        <Star
+                                                                            key={star}
+                                                                            size={16}
+                                                                            className={item.rating >= star ? 'text-amber-400 fill-amber-400' : 'text-neutral-600'}
+                                                                        />
+                                                                    ))}
+                                                                </div>
+
+                                                                {item.comment ? (
+                                                                    <p className="text-sm text-neutral-300 bg-neutral-900/50 rounded-md p-3">
+                                                                        "{item.comment}"
+                                                                    </p>
+                                                                ) : (
+                                                                    <p className="text-sm text-neutral-500 italic">No comment provided.</p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )
+                                        }
+                                    </div>
+                                )}
+                            </div>
+                        </section>
+                    </main>
+                )}
             </div>
         </div>
     );
@@ -182,16 +229,16 @@ EventDetailsModal.propTypes = {
     isOpen: PropTypes.bool.isRequired,
     onClose: PropTypes.func.isRequired,
     event: PropTypes.shape({
-        _id: PropTypes.string,
+        id: PropTypes.string,
         title: PropTypes.string,
         description: PropTypes.string,
-        startDateTime: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]),
+        start_date_time: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]),
         capacity: PropTypes.number,
-        eventType: PropTypes.string,
-        targetInterests: PropTypes.arrayOf(PropTypes.string),
-        targetLifeTransitions: PropTypes.arrayOf(PropTypes.string),
-        targetPHQ9Severity: PropTypes.string,
-        targetGAD7Severity: PropTypes.string,
+        event_type: PropTypes.string,
+        target_interests: PropTypes.arrayOf(PropTypes.string),
+        target_life_transitions: PropTypes.arrayOf(PropTypes.string),
+        target_phq_severity: PropTypes.arrayOf(PropTypes.string),
+        target_gad_severity: PropTypes.arrayOf(PropTypes.string),
         address: PropTypes.string,
         attendees: PropTypes.shape({
             users: PropTypes.arrayOf(PropTypes.string),
@@ -239,7 +286,7 @@ const AttendeeList = ({ title, attendees, icon: Icon }) => {
                 {attendees.length > 0 ? (
                     attendees.map(attendeeId => (
                         <div key={attendeeId} className="group flex items-center justify-between gap-3 p-1 rounded hover:bg-neutral-700/50">
-                            <span className="font-mono text-sm text-neutral-400">{attendeeId}</span>
+                            <span className="font-mono text-sm text-neutral-400 truncate w-32">{attendeeId}</span>
                             <button onClick={() => handleCopy(attendeeId)} className="opacity-0 group-hover:opacity-100 transition-opacity">
                                 <Copy size={14} className="text-neutral-500 hover:text-sky-400" />
                             </button>
@@ -247,7 +294,7 @@ const AttendeeList = ({ title, attendees, icon: Icon }) => {
                     ))
                 ) : (
                     <p className="py-4 text-center text-sm text-neutral-500">
-                        No {title.toLowerCase()} have registered yet.
+                        No registered attendees.
                     </p>
                 )}
             </div>

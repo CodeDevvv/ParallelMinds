@@ -19,7 +19,7 @@ Section.propTypes = { title: PropTypes.string, children: PropTypes.node, icon: P
 const DetailItem = ({ label, value }) => (
     <div>
         <p className="text-sm font-medium text-neutral-400">{label}</p>
-        <div className="text-base text-neutral-100">{value || 'N/A'}</div>
+        <div className="text-base text-neutral-100">{value || 0}</div>
     </div>
 );
 DetailItem.propTypes = { label: PropTypes.string, value: PropTypes.node };
@@ -56,7 +56,7 @@ const GroupInfo = ({ isOpen, onClose, group }) => {
                         <X size={20} />
                     </button>
                     <h2 className="text-2xl font-bold">Group Details</h2>
-                    <p className="font-mono text-sm text-neutral-400 mt-1">ID: {group._id}</p>
+                    <p className="font-mono text-sm text-neutral-400 mt-1">ID: {group.id}</p>
                 </header>
 
                 <main className="flex-1 overflow-y-auto p-6">
@@ -77,11 +77,11 @@ const GroupInfo = ({ isOpen, onClose, group }) => {
                             </Section>
 
                             <Section title="Settings" icon={Settings}>
-                                <DetailItem label="Current / Max Size" value={`${group.settings?.currentSize} / ${group.settings?.maxSize}`} />
+                                <DetailItem label="Current / Max Size" value={`${group?.current_size} / ${group?.max_size}`} />
                                 <DetailItem label="Status" value={
-                                    <span className={`flex items-center gap-2 font-semibold ${group.settings?.isOpen ? 'text-green-400' : 'text-red-400'}`}>
-                                        {group.settings?.isOpen ? <CheckCircle size={16} /> : <XCircle size={16} />}
-                                        {group.settings?.isOpen ? 'Open for new members' : 'Closed'}
+                                    <span className={`flex items-center gap-2 font-semibold ${group?.is_open ? 'text-green-400' : 'text-red-400'}`}>
+                                        {group?.is_open ? <CheckCircle size={16} /> : <XCircle size={16} />}
+                                        {group?.is_open ? 'Open for new members' : 'Closed'}
                                     </span>
                                 } />
                             </Section>
@@ -89,14 +89,14 @@ const GroupInfo = ({ isOpen, onClose, group }) => {
 
                         <div className="space-y-8">
                             <Section title="Group Profile" icon={HeartPulse}>
-                                <DetailItem label="Avg PHQ-9 Score" value={group.groupProfile?.avgPHQ9Score} />
-                                <DetailItem label="Avg GAD-7 Score" value={group.groupProfile?.avgGAD7Score} />
-                                <DetailItem label="Common Life Transitions" value={<TagList items={group.groupProfile?.commonLifeTransitions} />} />
-                                <DetailItem label="Shared Interests" value={<TagList items={group.groupProfile?.sharedInterests} />} />
+                                <DetailItem label="Avg PHQ-9 Score" value={group?.avg_phq_score} />
+                                <DetailItem label="Avg GAD-7 Score" value={group?.avg_gad_score} />
+                                <DetailItem label="Common Life Transitions" value={<TagList items={group?.common_life_transitions} />} />
+                                <DetailItem label="Shared Interests" value={<TagList items={group?.shared_interests} />} />
                             </Section>
 
                             <Section title="Matched Events" icon={CalendarCheck}>
-                                <DetailItem label="Total Matched" value={group.matchedEvents?.length || 0} />
+                                <DetailItem label="Total Matched" value={group?.event_count} />
                             </Section>
                         </div>
                     </div>

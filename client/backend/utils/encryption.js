@@ -1,4 +1,4 @@
-import crypto from 'crypto'
+import crypto from 'crypto';
 
 const ALGORITHM = 'aes-256-gcm'
 const SECRET_KEY = Buffer.from(process.env.ENCRYPTION_KEY, 'hex'); 

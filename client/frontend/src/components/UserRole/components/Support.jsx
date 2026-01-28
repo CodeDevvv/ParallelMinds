@@ -183,7 +183,7 @@ const Support = () => {
                 <h1>No Tickets.</h1>
               </div> :
                 queryHistory.map(ticket => (
-                  <TicketItem key={ticket._id} ticket={ticket} />
+                  <TicketItem key={ticket.id} ticket={ticket} />
                 ))}
           </div>
         </div>

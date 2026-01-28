@@ -27,7 +27,7 @@ const RecentActivity = () => {
             setIsLoading(true)
             try {
                 const res = await axios.get(`${config.API_URL}/fetchLogs`)
-                setLogs(res.data.logs)
+                setLogs(res.data.systemLogs)
             } catch (error) {
                 console.log(error.message)
             } finally {
@@ -84,7 +84,7 @@ const RecentActivity = () => {
 
                                         <div className="flex-1">
                                             <p className="text-text-primary text-sm">{log.description}</p>
-                                            <p className="text-text-muted text-xs mt-1">{getHoursElapsed(log.createdAt)}</p>
+                                            <p className="text-text-muted text-xs mt-1">{getHoursElapsed(log.created_at)}</p>
                                         </div>
                                     </div>
                                 );

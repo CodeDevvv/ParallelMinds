@@ -135,7 +135,7 @@ const GroupInfo = ({ isOpen, onClose, groupInfo }) => {
                                         <h4 className="mb-3 text-md font-semibold text-gray-800 dark:text-neutral-100">Members ({members.length})</h4>
                                         <div className="space-y-3 max-h-40 overflow-y-auto pr-2">
                                             {members.map((member) => (
-                                                <div key={member._id} className="flex items-center gap-3">
+                                                <div key={member.id} className="flex items-center gap-3">
                                                     <p className="font-medium text-gray-800 dark:text-neutral-200">{member.name}</p>
 
                                                 </div>
@@ -188,7 +188,7 @@ GroupInfo.propTypes = {
         eventsMatched: PropTypes.number,
         sharedInterests: PropTypes.arrayOf(PropTypes.string),
         members: PropTypes.arrayOf(PropTypes.shape({
-            _id: PropTypes.string,
+            id: PropTypes.string,
             name: PropTypes.string,
         })),
     }).isRequired

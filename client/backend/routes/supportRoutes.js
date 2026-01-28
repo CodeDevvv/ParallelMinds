@@ -1,6 +1,6 @@
 import express from "express"
 
-import { fetchQueryHistory, submitQuery } from "../controllers/SupportController.js"
+import { fetchQueryHistory, submitQuery } from "../controllers/supportController.js"
 
 const route = express.Router()
 

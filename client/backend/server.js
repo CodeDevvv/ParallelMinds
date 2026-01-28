@@ -1,17 +1,16 @@
-import express from 'express';
-import http from "http"
-import cors from "cors"
-import dotenv from 'dotenv';
-import process from 'process';
 import cookieParser from 'cookie-parser';
+import cors from "cors";
+import dotenv from 'dotenv';
+import express from 'express';
+import http from "http";
+import process from 'process';
 
-import connectDB from './config/db.js';
 import { initiateSocket } from './sockets/socket.js';
 
-import AuthRoutes from './routes/AuthRoutes.js';
-import UserRoutes from './routes/UserRoutes.js'
-import ChatRoutes from './routes/ChatRouter.js'
-import SupportRoutes from './routes/SupportRoutes.js'
+import AuthRoutes from './routes/authRoutes.js';
+import communityRoutes from './routes/communityRoutes.js';
+import SupportRoutes from './routes/supportRoutes.js';
+import UserRoutes from './routes/userRoutes.js';
 
 
 const app = express();
@@ -24,7 +23,7 @@ app.use(cors({
 }))
 app.use(express.json());
 dotenv.config();
-connectDB();
+
 
 // Socket.io
 const httpServer = http.createServer(app)
@@ -39,5 +38,5 @@ httpServer.listen(PORT, () => {
 // Api's
 app.use('/api/auth', AuthRoutes)
 app.use('/api/user', UserRoutes)
-app.use('/api/chat', ChatRoutes)
+app.use('/api/community', communityRoutes)
 app.use('/api/support', SupportRoutes)

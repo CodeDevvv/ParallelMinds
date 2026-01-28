@@ -1,10 +1,10 @@
 import express from 'express'
 
-import { FetchData, fetchEvents, joinEvent, leaveEvent, submitFeedback, updateProfile } from '../controllers/UserController.js'
+import { fetchData, fetchEvents, joinEvent, leaveEvent, submitFeedback, updateProfile } from '../controllers/userController.js'
 
 const router = express.Router()
 
-router.get('/fetchData', FetchData)
+router.get('/fetchData', fetchData)
 router.get('/fetchEvents', fetchEvents)
 router.post('/joinEvent', joinEvent)
 router.delete('/leaveEvent', leaveEvent)
