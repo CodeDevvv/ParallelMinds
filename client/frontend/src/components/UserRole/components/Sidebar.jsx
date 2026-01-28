@@ -13,7 +13,7 @@ import { Menu, Transition } from "@headlessui/react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { useUser } from "../utils/dataQuery";
+import { useUserData } from "../utils/dataQuery";
 import config from "../../../config";
 
 // No changes to navItems array as requested
@@ -29,7 +29,7 @@ const Sidebar = () => {
   const [open] = useState(true);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { data: userData } = useUser();
+  const { data: userData } = useUserData();
 
   const handleLogout = () => {
     axios
@@ -91,7 +91,7 @@ const Sidebar = () => {
             {open && (
               <div className="flex-1 text-left overflow-hidden">
                 <p className="text-sm font-semibold text-white truncate">
-                  {userData?.personalInfo?.name || "User"}
+                  {userData?.full_name || "User"}
                 </p>
                 <p className="text-xs text-neutral-400 truncate">
                   {userData?.email || "user@email.com"}

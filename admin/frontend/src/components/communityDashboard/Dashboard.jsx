@@ -153,10 +153,10 @@ const Dashboard = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                             {groups.map(group => (
                                 <GroupCard
-                                    key={group._id}
+                                    key={group.id}
                                     group={group}
                                     onViewDetails={handleViewDetails}
-                                    onViewChat={handleViewChat}
+                                    onViewChat={() => handleViewChat(group.id)}
                                 />
                             ))}
                         </div>

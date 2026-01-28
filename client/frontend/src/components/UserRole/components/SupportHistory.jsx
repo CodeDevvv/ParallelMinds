@@ -27,7 +27,7 @@ const TicketItem = ({ ticket }) => {
                     <div className="flex-1">
                         <p className="font-semibold text-neutral-100">{ticket.subject}</p>
                         <p className="mt-1 text-xs text-neutral-400">
-                            Submitted on: {formatDate(ticket.submittedAt)}
+                            Submitted on: {formatDate(ticket.submitted_at)}
                         </p>
                     </div>
 
@@ -52,7 +52,7 @@ const TicketItem = ({ ticket }) => {
                                 <span>Your Query</span>
                             </div>
                             <p className="rounded-lg bg-neutral-900/70 p-3 text-sm text-neutral-300">
-                                {ticket.query || "No query details provided."}
+                                {ticket.message_text || "No query details provided."}
                             </p>
                         </div>
 
@@ -62,12 +62,12 @@ const TicketItem = ({ ticket }) => {
                                 <span className={isClosed ? "text-green-400" : "hidden"}>Response</span>
                             </div>
                             <p className={isClosed ?"rounded-lg bg-neutral-900/70 p-3 text-sm text-neutral-200" : "ounded-lg bg-neutral-900/70 p-3 text-sm text-neutral-200 opacity-15"}>
-                                {ticket.response || "We have received your request and are actively working to resolve it. You will hear from us soon."}
+                                {ticket.admin_response || "We have received your request and are actively working to resolve it. You will hear from us soon."}
                             </p>
 
-                            {ticket.respondedAt && (
+                            {ticket.responded_at && (
                                 <p className="mt-1 text-right text-xs text-neutral-500">
-                                    Responded on: {formatDate(ticket.respondedAt)}
+                                    Responded on: {formatDate(ticket.responded_at)}
                                 </p>
                             )}
                         </div>
@@ -81,11 +81,11 @@ const TicketItem = ({ ticket }) => {
 TicketItem.propTypes = {
     ticket: PropTypes.shape({
         subject: PropTypes.string.isRequired,
-        submittedAt: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]).isRequired,
-        respondedAt: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]),
+        submitted_at: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]).isRequired,
+        responded_at: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]),
         status: PropTypes.string.isRequired,
-        response: PropTypes.string,
-        query: PropTypes.string
+        admin_response: PropTypes.string,
+        message_text: PropTypes.string
     }).isRequired
 };
 

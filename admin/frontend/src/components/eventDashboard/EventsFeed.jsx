@@ -3,7 +3,7 @@ import axios from 'axios';
 import config from '../../config';
 import toast from 'react-hot-toast';
 
-import { motion as Motion } from 'framer-motion'; 
+import { motion as Motion } from 'framer-motion';
 import EventDetailsModal from './EventDetailsModal';
 import EventCard from './Cards/EventCard';
 import PaginationNav from '../../ui/PaginationNav';
@@ -88,6 +88,7 @@ const EventsFeed = ({ refresh }) => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                             {events.map((event) =>
                                 <EventCard
+                                    key={event.id}
                                     event={event}
                                     handlViewDetails={handlViewDetails}
                                 />

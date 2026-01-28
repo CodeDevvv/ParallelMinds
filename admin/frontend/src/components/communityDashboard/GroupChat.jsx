@@ -34,13 +34,12 @@ const GroupChat = ({ isOpen, onClose, chats, isLoading }) => {
         e.preventDefault();
         if (newMessage.trim() === '') return;
         setLocalCounter(p => p + 1)
+
         const messageData = {
-            groupId: groupId,
-            senderId: adminData.id,
             message: newMessage,
-            timestamp: new Date(),
-            senderName: "Admin",
-            messageType: 'admin'
+            created_at: new Date(),
+            messageType: 'admin',
+            is_admin_message: true
         };
 
         socketRef.current.emit('sendMessage', messageData, (response) => {
@@ -55,7 +54,7 @@ const GroupChat = ({ isOpen, onClose, chats, isLoading }) => {
     useEffect(() => {
         if (!groupId) return;
         socketRef.current = io('http://localhost:3000/community', {
-            auth: { group_id: groupId },
+            auth: { group_id: groupId, user_id: adminData.id, full_name: 'admin' },
         });
         socketRef.current.on('newMessage', (incomingMessage) => {
             setMessages((prevMessages) => [...prevMessages, incomingMessage]);
@@ -66,7 +65,7 @@ const GroupChat = ({ isOpen, onClose, chats, isLoading }) => {
                 socketRef.current.disconnect();
             }
         };
-    }, [chats, groupId]);
+    }, [chats, groupId, adminData.id]);
 
     if (!isOpen) return null;
 
@@ -119,7 +118,7 @@ const GroupChat = ({ isOpen, onClose, chats, isLoading }) => {
                             } else {
                                 const isAdminMessage = chat.messageType === 'admin';
                                 return (
-                                    <div key={chat._id || localCounter} className={`flex items-end gap-3 ${isAdminMessage ? 'justify-end' : 'justify-start'}`}>
+                                    <div key={chat.id || localCounter} className={`flex items-end gap-3 ${isAdminMessage ? 'justify-end' : 'justify-start'}`}>
                                         <div className={`max-w-lg p-3 rounded-2xl shadow-md ${isAdminMessage
                                             ? 'bg-sky-800 text-white rounded-br-none'
                                             : 'bg-neutral-700 text-neutral-200 rounded-bl-none'
@@ -132,7 +131,7 @@ const GroupChat = ({ isOpen, onClose, chats, isLoading }) => {
                                             </div>
                                             <p className="text-base break-words">{chat.message}</p>
                                             <p className={`text-xs mt-1.5 text-right ${isAdminMessage ? 'text-sky-200/70' : 'text-neutral-500'}`}>
-                                                {formatTime(chat.timestamp)}
+                                                {formatTime(chat.created_at)}
                                             </p>
                                         </div>
                                     </div>
@@ -180,7 +179,7 @@ GroupChat.propTypes = {
         _id: PropTypes.string,
         senderId: PropTypes.string.isRequired,
         message: PropTypes.any.isRequired,
-        timestamp: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]).isRequired,
+        created_at: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]).isRequired,
         senderName: PropTypes.string.isRequired,
         isAdmin: PropTypes.bool,
         messageType: PropTypes.oneOf(['user', 'admin', 'system']),

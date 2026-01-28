@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 import 'react-toastify/dist/ReactToastify.css';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
-
 import Layout from './components/auth/UserAuth/Layout';
 import UserLayout from './components/UserRole/UserLayout';
 import Events from './components/UserRole/components/Events';

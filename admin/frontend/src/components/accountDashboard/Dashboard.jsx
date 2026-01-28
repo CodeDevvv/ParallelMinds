@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import {  UsersIcon, UserPlusIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
+import { ShieldCheckIcon, UserPlusIcon, UsersIcon } from '@heroicons/react/24/outline';
 import { motion as Motion } from 'framer-motion';
-import DoctorAccountManager from './Accounts/DoctorAccountManager';
+import { useState } from 'react';
 import AdminAccountManager from './Accounts/AdminAccountManager';
+import DoctorAccountManager from './Accounts/DoctorAccountManager';
 import UserAccountManager from './Accounts/UserAccountManager';
 
 const Dashboard = () => {

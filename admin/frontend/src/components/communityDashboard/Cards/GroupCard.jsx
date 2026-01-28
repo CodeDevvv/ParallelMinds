@@ -8,7 +8,7 @@ const GroupCard = ({ group, onViewDetails, onViewChat }) => {
                  shadow-lg transition-all duration-300 hover:border-sky-500/50 hover:-translate-y-1"
     >
       <div className="absolute top-4 right-4 bg-neutral-800 text-sky-400 text-xs font-mono px-2 py-1 rounded-full">
-        {group._id.slice(-6)} 
+        {group.id.slice(-6)} 
       </div>
 
       <div className="flex-1 space-y-5 p-5">
@@ -16,13 +16,13 @@ const GroupCard = ({ group, onViewDetails, onViewChat }) => {
           <div className="flex-1 flex flex-col items-center justify-center gap-1 px-2">
             <Users size={20} className="text-sky-400" />
             <p className="text-sm text-neutral-400">
-              <span className="font-bold text-white">{group.membersId.length || 0}</span> Members
+              <span className="font-bold text-white">{group.member_count || 0}</span> Members
             </p>
           </div>
           <div className="flex-1 flex flex-col items-center justify-center gap-1 px-2">
             <CalendarCheck size={20} className="text-emerald-400" />
             <p className="text-sm text-neutral-400">
-              <span className="font-bold text-white">{group.matchedEvents.length || 0}</span> Events
+              <span className="font-bold text-white">{group.event_count || 0}</span> Events
             </p>
           </div>
         </div>
@@ -32,8 +32,8 @@ const GroupCard = ({ group, onViewDetails, onViewChat }) => {
             Shared Interests
           </h4>
           <div className="flex flex-wrap gap-2">
-            {group.groupProfile.sharedInterests.length > 0 ? (
-              group.groupProfile.sharedInterests.slice(0, 5).map(interest => ( 
+            {group.shared_interests.length > 0 ? (
+              group.shared_interests.slice(0, 5).map(interest => ( 
                 <span key={interest} className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/10 px-3 py-1 text-xs font-medium text-sky-300">
                   <Tag size={12} />
                   {interest}
@@ -42,9 +42,9 @@ const GroupCard = ({ group, onViewDetails, onViewChat }) => {
             ) : (
               <p className="text-xs text-neutral-500">No shared interests specified.</p>
             )}
-            {group.groupProfile.sharedInterests.length > 5 && (
+            {group.shared_interests.length > 5 && (
               <span className="text-xs font-medium text-neutral-500">
-                + {group.groupProfile.sharedInterests.length - 5} more
+                + {group.shared_interests.length - 5} more
               </span>
             )}
           </div>

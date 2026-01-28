@@ -3,73 +3,76 @@ import { CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import config from '../../config';
-import Loader from '../../ui/Loader';
 import QueryCard from './Cards/QueryCard';
 import FullScreenLoader from '../../ui/FullScreenLoader';
 import PaginationNav from '../../ui/PaginationNav';
-
 
 const Dashboard = () => {
     const [queries, setQueries] = useState([]);
     const [activeTab, setActiveTab] = useState('Open');
     const [currentPage, setCurrentPage] = useState(1);
-    const [hasMore, setHasMore] = useState(true)
-    const [isSubmitReplyLoading, setIsSubmitReplyLoading] = useState(false)
-    const [isFetchQueryLoading, setIsFetchQueryLoading] = useState(false)
+    const [hasMore, setHasMore] = useState(true);
+    const [submittingId, setSubmittingId] = useState(null);
+    const [isFetchQueryLoading, setIsFetchQueryLoading] = useState(false);
 
-    const handleReplySubmit = async (queryId, responseText) => {
+    const handleReplySubmit = async (id, responseText) => {
         try {
-            setIsSubmitReplyLoading(true)
-            const res = await axios.post(`${config.API_URL}/submitQueryResponse`, { queryId, responseText })
-            const { status, message } = res.data
+            setSubmittingId(id);
+            const res = await axios.post(`${config.API_URL}/submitQueryResponse`, { id, admin_response: responseText });
+            const { status, message } = res.data;
             if (status) {
-                toast.success(message)
-                setQueries(currentQueries =>
-                    currentQueries.map(q =>
-                        q._id === queryId
-                            ? { ...q, status: 'Closed', response: responseText, respondedAt: new Date() }
-                            : q
-                    )
-                );
+                toast.success(message);
+                if (activeTab === 'Open') {
+                    setQueries(currentQueries => currentQueries.filter(q => q.id !== id));
+                } else {
+                    setQueries(currentQueries =>
+                        currentQueries.map(q =>
+                            q.id === id
+                                ? { ...q, status: 'Closed', admin_response: responseText }
+                                : q
+                        )
+                    );
+                }
             } else {
-                toast.error(message)
+                toast.error(message);
             }
         } catch (error) {
-            console.log(error.message)
-            toast.error("Server request failed. Please retry.")
+            console.log(error.message);
+            toast.error("Server request failed. Please retry.");
         } finally {
-            setIsSubmitReplyLoading(false)
+            setSubmittingId(null);
         }
     };
 
     const handleTabChange = (tab) => {
         setActiveTab(tab);
-        setQueries([])
+        setQueries([]);
         setCurrentPage(1);
+        setHasMore(true); 
     };
 
     useEffect(() => {
         const fetchQueries = async () => {
             try {
-                setIsFetchQueryLoading(true)
-                const response = await axios.get(`${config.API_URL}/fetchQueries?status=${activeTab}&page=${currentPage}`)
-                const { status, message, data, hasMore } = response.data
+                setIsFetchQueryLoading(true);
+                const response = await axios.get(`${config.API_URL}/fetchQueries?status=${activeTab}&page=${currentPage}`);
+                const { status, message, data, hasMore: moreAvailable } = response.data;
                 if (status) {
-                    setQueries(data)
-                    setHasMore(hasMore)
+                    setQueries(data);
+                    setHasMore(moreAvailable);
                 } else {
-                    toast.error(message)
-                    setCurrentPage(1)
+                    toast.error(message);
+                    setQueries([]);
                 }
             } catch (error) {
-                console.log(error.message)
-                toast.error("Server request failed. Please retry.")
+                console.log(error.message);
+                toast.error("Server request failed. Please retry.");
             } finally {
-                setIsFetchQueryLoading(false)
+                setIsFetchQueryLoading(false);
             }
-        }
-        fetchQueries()
-    }, [activeTab, currentPage])
+        };
+        fetchQueries();
+    }, [activeTab, currentPage]);
 
     return (
         <div className="flex-1 text-white p-6 md:p-8 lg:p-10">
@@ -102,10 +105,10 @@ const Dashboard = () => {
                             queries.length > 0 ? (
                                 queries.map(query => (
                                     <QueryCard
-                                        key={query._id}
+                                        key={query.id}
                                         query={query}
                                         onReplySubmit={handleReplySubmit}
-                                        isLoading={isSubmitReplyLoading}
+                                        isLoading={submittingId === query.id}
                                     />
                                 ))
                             ) : (
@@ -120,7 +123,7 @@ const Dashboard = () => {
                     }
                 </main>
 
-                <PaginationNav 
+                <PaginationNav
                     onNext={() => setCurrentPage(p => p + 1)}
                     onPrev={() => setCurrentPage(p => p - 1)}
                     hideNext={!hasMore}
@@ -131,6 +134,5 @@ const Dashboard = () => {
         </div>
     );
 };
-
 
 export default Dashboard;

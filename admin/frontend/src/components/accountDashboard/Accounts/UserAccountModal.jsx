@@ -14,7 +14,7 @@ const UserAccountModal = ({ isOpen, onClose, user, onDelete }) => {
 
     const handleConfirm = (confirmed) => {
         if (confirmed) {
-            onDelete(user._id);
+            onDelete(user.id);
             onClose();
         }
     };
@@ -35,8 +35,8 @@ const UserAccountModal = ({ isOpen, onClose, user, onDelete }) => {
                         <User size={24} className="text-sky-400" />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-bold">{user.personalInfo?.name || 'User Profile'} {`(Id: ${user._id})`}</h2>
-                        <p className="text-sm text-neutral-400">{user.email}</p>
+                        <h2 className="text-2xl font-bold">{user?.full_name || 'User Profile'} {`(Id: ${user?.id})`}</h2>
+                        <p className="text-sm text-neutral-400">{user?.email}</p>
                     </div>
                 </header>
 
@@ -46,16 +46,16 @@ const UserAccountModal = ({ isOpen, onClose, user, onDelete }) => {
                             <section>
                                 <h3 className="text-lg font-semibold mb-4 text-neutral-200">Personal Information</h3>
                                 <div className="space-y-4 rounded-lg bg-neutral-700/30 p-4">
-                                    <DetailItem icon={Cake} label="Date of Birth" value={user.personalInfo?.dateOfBirth ? new Date(user.personalInfo.dateOfBirth).toLocaleDateString('en-IN') : 'N/A'} />
-                                    <DetailItem icon={VenusAndMars} label="Gender" value={user.personalInfo?.gender} />
+                                    <DetailItem icon={Cake} label="Date of Birth" value={user?.date_of_birth ? new Date(user?.date_of_birth).toLocaleDateString('en-IN') : 'N/A'} />
+                                    <DetailItem icon={VenusAndMars} label="Gender" value={user?.gender} />
                                 </div>
                             </section>
                             <section>
                                 <h3 className="text-lg font-semibold mb-4 text-neutral-200">Location Details</h3>
                                 <div className="space-y-4 rounded-lg bg-neutral-700/30 p-4">
-                                    <DetailItem icon={MapPin} label="Address" value={user.location?.address} />
-                                    <DetailItem label="City" value={user.location?.city} />
-                                    <DetailItem label="Group ID" value={user.groupId || 'Not assigned'} />
+                                    <DetailItem icon={MapPin} label="Address" value={user?.address} />
+                                    <DetailItem label="City" value={user?.city} />
+                                    <DetailItem label="Group ID" value={user.group_id || 'Not assigned'} />
                                 </div>
                             </section>
                         </div>
@@ -67,18 +67,18 @@ const UserAccountModal = ({ isOpen, onClose, user, onDelete }) => {
                                     icon={ClipboardList}
                                     label="Status"
                                     value={
-                                        <span className={`flex items-center gap-2 font-semibold ${user.questionnaire?.completed ? 'text-green-400' : 'text-yellow-400'}`}>
-                                            {user.questionnaire?.completed ? <CheckCircle size={16} /> : <XCircle size={16} />}
-                                            {user.questionnaire?.completed ? 'Completed' : 'Pending'}
+                                        <span className={`flex items-center gap-2 font-semibold ${user?.is_questionnaire_completed ? 'text-green-400' : 'text-yellow-400'}`}>
+                                            {user?.is_questionnaire_completed ? <CheckCircle size={16} /> : <XCircle size={16} />}
+                                            {user?.is_questionnaire_completed ? 'Completed' : 'Pending'}
                                         </span>
                                     }
                                 />
                                 {
-                                    user.questionnaire?.completed ?
+                                    user?.is_questionnaire_completed ?
                                         <div>
-                                            <DetailItem icon={HeartPulse} label="PHQ-9 Score (Depression)" value={`${user.questionnaire?.phq9Assessment?.totalScore} - ${user.questionnaire?.phq9Assessment?.category}`} />
-                                            <DetailItem icon={HeartPulse} label="GAD-7 Score (Anxiety)" value={`${user.questionnaire?.gad7Assessment?.totalScore} - ${user.questionnaire?.gad7Assessment?.category}`} />
-                                            <DetailItem icon={Sparkles} label="Interests" value={<TagList items={user.questionnaire?.interests?.responses} />} />
+                                            <DetailItem icon={HeartPulse} label="PHQ-9 Score (Depression)" value={`${user?.phq_score} - ${user?.phq_category}`} />
+                                            <DetailItem icon={HeartPulse} label="GAD-7 Score (Anxiety)" value={`${user?.gad_score} - ${user?.gad_category}`} />
+                                            <DetailItem icon={Sparkles} label="Interests" value={<TagList items={user?.interests} />} />
                                         </div>
                                         :
                                         <div className="space-y-4 rounded-lg bg-neutral-700/30 p-4">
@@ -101,7 +101,7 @@ const UserAccountModal = ({ isOpen, onClose, user, onDelete }) => {
                 </footer>
             </div>
             {isAlertBoxOpen && <ConfirmationDialog
-                message={`Are you sure you want delete this user - ${user?.personalInfo?.name}?`}
+                message={`Are you sure you want delete this user - ${user?.full_name}?`}
                 onClose={() => setIsAlertBoxOpen(false)}
                 onConfirm={handleConfirm}
             />}

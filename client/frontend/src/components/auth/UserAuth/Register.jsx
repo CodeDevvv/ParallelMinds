@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import toast from 'react-hot-toast';
 import DatePicker from 'react-datepicker';
 import { useNavigate } from 'react-router-dom';
-
+import '@geoapify/geocoder-autocomplete/styles/minimal.css';
 import { GeoapifyContext, GeoapifyGeocoderAutocomplete } from '@geoapify/react-geocoder-autocomplete';
 import 'react-datepicker/dist/react-datepicker.css';
 import {
@@ -17,13 +17,15 @@ import {
     EyeSlashIcon
 } from '@heroicons/react/24/outline';
 
-import {  useLoading } from '../../../store.js';
+// Removed useLoading to prevent component unmounting
 import { schema } from '../../../utils/ValidationSchema.js';
 import config from '../../../config.js';
 
 const Register = ({ onToggleMode }) => {
     const navigate = useNavigate();
-    const { setIsLoading } = useLoading();
+    // 1. We use local state for button loading instead of global loading
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    
     const GEOAPIFY_API_KEY = import.meta.env.VITE_GEOAPIFY_API_KEY;
 
     const [formData, setFormData] = useState({
@@ -42,9 +44,9 @@ const Register = ({ onToggleMode }) => {
     };
 
     const handleDateChange = (date) => {
+        if (!date) return; // specific check for null date
         const dob = new Date(date);
         const formattedDate = dob.toISOString().split('T')[0];
-
         setFormData(prev => ({ ...prev, dob: formattedDate }));
     };
 
@@ -63,14 +65,15 @@ const Register = ({ onToggleMode }) => {
         }));
     };
 
-
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setIsLoading(true);
+        
+        // 2. Start local loading
+        setIsSubmitting(true);
 
         try {
-            // Validate form data
             await schema.validate(formData, { abortEarly: false });
+            
             const response = await axios.post(`${config.API_URL}/api/auth/userregister`, formData, { withCredentials: true });
             const { status, message } = response.data;
 
@@ -82,13 +85,18 @@ const Register = ({ onToggleMode }) => {
             }
         } catch (error) {
             if (error.inner) {
+                // Validation errors
                 error.inner.forEach(e => toast.error(e.message));
+            } else if (error.response) {
+                // Axios server error
+                toast.error(error.response.data.message || "Server Error");
             } else {
                 console.error(error);
                 toast.error("Registration failed. Please try again.");
             }
         } finally {
-            setIsLoading(false);
+            // 3. Stop local loading (Component stays mounted, data stays safe)
+            setIsSubmitting(false);
         }
     };
 
@@ -132,7 +140,7 @@ const Register = ({ onToggleMode }) => {
                     <div className="relative w-full">
                         <CalendarDaysIcon className="w-5 h-5 absolute left-3 top-3 text-[#B8B8B8] z-10" />
                         <DatePicker
-                            selected={formData.dob}
+                            selected={formData.dob ? new Date(formData.dob) : null} // Fixed date parsing
                             onChange={handleDateChange}
                             placeholderText="Date of Birth"
                             dateFormat="dd/MM/yyyy"
@@ -165,20 +173,21 @@ const Register = ({ onToggleMode }) => {
                     <MapPinIcon className="w-5 h-5 absolute left-3 top-3 text-[#B8B8B8] z-10" />
                     <div className="">
                         <GeoapifyContext apiKey={GEOAPIFY_API_KEY}>
-                            <GeoapifyGeocoderAutocomplete
-                                placeholder="Enter your address"
-                                type="street"
-                                countryCodes={["IN"]}
-                                limit={4}
-                                placeSelect={onPlaceSelect}
-                                value={formData.location.address}
-                                filterByCircle={{
-                                    lon: 77.59117744417836,
-                                    lat: 12.985218420238013,
-                                    radiusMeters: 60000
-                                }}
-                                className="w-full bg-[#2A2A2A] border border-[#404040] rounded-lg pr-4 py-3 text-white placeholder-[#B8B8B8] focus:outline-none focus:ring-2 focus:ring-[#4F8CFF] focus:border-transparent transition-all duration-200"
-                            />
+                            <div className="custom-geoapify-wrapper">
+                                <GeoapifyGeocoderAutocomplete
+                                    placeholder="Enter your address"
+                                    type="street"
+                                    countryCodes={["IN"]}
+                                    limit={4}
+                                    initialValue={formData.location.address || ""}
+                                    placeSelect={onPlaceSelect}
+                                    filterByCircle={{
+                                        lon: 77.59117744417836,
+                                        lat: 12.985218420238013,
+                                        radiusMeters: 60000
+                                    }}
+                                />
+                            </div>
                         </GeoapifyContext>
                     </div>
                 </div>
@@ -207,11 +216,15 @@ const Register = ({ onToggleMode }) => {
                     </button>
                 </div>
 
+                {/* 4. Updated button to show loading state */}
                 <button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-[#4F8CFF] to-[#7B68EE] text-white font-semibold py-3 rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+                    disabled={isSubmitting}
+                    className={`w-full bg-gradient-to-r from-[#4F8CFF] to-[#7B68EE] text-white font-semibold py-3 rounded-lg hover:shadow-lg transform transition-all duration-200 ${
+                        isSubmitting ? 'opacity-70 cursor-not-allowed scale-100' : 'hover:scale-105'
+                    }`}
                 >
-                    Create Account
+                    {isSubmitting ? 'Creating Account...' : 'Create Account'}
                 </button>
             </form>
 
@@ -229,8 +242,9 @@ const Register = ({ onToggleMode }) => {
         </div>
     );
 };
+
 Register.propTypes = {
     onToggleMode: PropTypes.func.isRequired,
 };
 
-export default Register
+export default Register;

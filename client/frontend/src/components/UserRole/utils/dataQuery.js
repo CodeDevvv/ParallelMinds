@@ -3,16 +3,15 @@ import axios from 'axios'
 import config from '../../../config';
 
 
-export const useUser = () => {
+export const useUserData = () => {
     return useQuery({
         queryKey: ['userData'],
         queryFn: async () => {
             const response = await axios.get(`${config.API_URL}/api/user/fetchData?datafor=user`, {
                 withCredentials: true
             });
-            return response.data;
-        }
-        ,
+            return response.data.user;
+        },
         staleTime: 1000 * 60 * 10
     })
 }

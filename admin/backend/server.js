@@ -1,17 +1,15 @@
-import express from "express"
-import dotenv from "dotenv"
 import cors from "cors"
+import dotenv from "dotenv"
+import express from "express"
 
-import { connectDb } from "./utils/connectDb"
-import AdminRouter from "./routes/AdminRouter"
-import EventRouter from "./routes/EventRouter"
+import AdminRouter from "./routes/adminRoutes"
+import EventRouter from "./routes/eventRoutes"
 
 dotenv.config()
 
 const app = express()
 app.use(cors())
 app.use(express.json())
-connectDb()
 
 app.get('/', (req, res) => {
     res.send(`<h1> Server is connected! </h1>`);

@@ -7,7 +7,7 @@ const AdminCard = ({ admin, handleDelete }) => {
     const [isAlertBoxOpen, setIsAlertBoxOpen] = useState(false)
     const handleConfirm = (confirmed) => {
         if (confirmed) {
-            handleDelete(admin._id, admin.name)
+            handleDelete(admin.id, admin.name)
         }
         setIsAlertBoxOpen(false)
     }
