@@ -23,7 +23,16 @@ app.use(cors({
 }))
 app.use(express.json());
 dotenv.config();
-
+app.use((req, res, next) => {
+    const start = process.hrtime();
+    res.on('finish', () => {
+        const duration = process.hrtime(start);
+        // Convert to milliseconds (duration[0] is seconds, duration[1] is nanoseconds)
+        const ms = (duration[0] * 1000 + duration[1] / 1e6).toFixed(2);
+        console.log(`⏱️ [${req.method}] ${req.originalUrl} - ${ms}ms`);
+    });
+    next();
+});
 
 // Socket.io
 const httpServer = http.createServer(app)

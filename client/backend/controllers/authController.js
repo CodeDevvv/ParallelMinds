@@ -4,7 +4,6 @@ import { generateToken, getUserIdFromToken } from '../utils/generateToken.js';
 import { getGAD7Category, getPHQ9Category } from '../utils/helperFunctions.js';
 
 import pool, { query } from '../config/db.js';
-import Doctor from '../models/DoctorModel.js';
 import { matchGroupSQL } from '../services/matching.js';
 import { addSystemLog } from './logController.js';
 
@@ -404,73 +403,73 @@ export const authorizeUser = async (req, res) => {
 
 // TODO
 // Doctor Login
-export const doctorLogin = async (req, res) => {
-    const { email, password } = req.body;
+// export const doctorLogin = async (req, res) => {
+//     const { email, password } = req.body;
 
-    try {
-        const existingDoctor = await Doctor.findOne({ email });
-        if (!existingDoctor || !(await bcrypt.compare(password, existingDoctor.password))) {
-            return res.json({
-                status: false,
-                message: "Invalid credentials. Please check your email and password."
-            });
-        }
+//     try {
+//         const existingDoctor = await Doctor.findOne({ email });
+//         if (!existingDoctor || !(await bcrypt.compare(password, existingDoctor.password))) {
+//             return res.json({
+//                 status: false,
+//                 message: "Invalid credentials. Please check your email and password."
+//             });
+//         }
 
-        const token = generateToken(existingDoctor._id);
-        return res.status(200).json({
-            status: true,
-            token
-        });
-    } catch (error) {
-        console.log(error)
-        return res.json({ status: false, message: "Internal server error. Please refresh the page or try again later." })
-    }
-};
+//         const token = generateToken(existingDoctor._id);
+//         return res.status(200).json({
+//             status: true,
+//             token
+//         });
+//     } catch (error) {
+//         console.log(error)
+//         return res.json({ status: false, message: "Internal server error. Please refresh the page or try again later." })
+//     }
+// };
 
 // Doctor Registration
-export const doctorRegister = async (req, res) => {
-    const {
-        name,
-        email,
-        dob,
-        city,
-        licenseNumber,
-        specialization,
-        password
-    } = req.body;
+// export const doctorRegister = async (req, res) => {
+//     const {
+//         name,
+//         email,
+//         dob,
+//         city,
+//         licenseNumber,
+//         specialization,
+//         password
+//     } = req.body;
 
-    try {
-        const existingDoctor = await Doctor.findOne({ email });
-        if (existingDoctor) {
-            return res.json({
-                status: false,
-                message: "An account with this email already exists."
-            });
-        }
+//     try {
+//         const existingDoctor = await Doctor.findOne({ email });
+//         if (existingDoctor) {
+//             return res.json({
+//                 status: false,
+//                 message: "An account with this email already exists."
+//             });
+//         }
 
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
+//         const salt = await bcrypt.genSalt(10);
+//         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const newDoctor = await Doctor.create({
-            name,
-            email,
-            dob,
-            city,
-            licenseNumber,
-            specialization,
-            password: hashedPassword
-        });
+//         const newDoctor = await Doctor.create({
+//             name,
+//             email,
+//             dob,
+//             city,
+//             licenseNumber,
+//             specialization,
+//             password: hashedPassword
+//         });
 
-        addSystemLog({ eventType: 'doctor_registered', relatedType: 'user', description: `New Doctor registered. ID: ${newDoctor._id}` })
+//         addSystemLog({ eventType: 'doctor_registered', relatedType: 'user', description: `New Doctor registered. ID: ${newDoctor._id}` })
 
-        const token = generateToken(newDoctor._id);
-        return res.json({
-            status: true,
-            doctorId: newDoctor._id,
-            token
-        });
-    } catch (error) {
-        console.log(error)
-        return res.json({ status: false, message: "Internal server error. Please refresh the page or try again later." })
-    }
-};
+//         const token = generateToken(newDoctor._id);
+//         return res.json({
+//             status: true,
+//             doctorId: newDoctor._id,
+//             token
+//         });
+//     } catch (error) {
+//         console.log(error)
+//         return res.json({ status: false, message: "Internal server error. Please refresh the page or try again later." })
+//     }
+// };

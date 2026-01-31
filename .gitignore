@@ -2,7 +2,7 @@
 /node_modules
 **/node_modules
 
----
+.bun/
 
 ## Build & Production Output
 /dist
@@ -11,13 +11,11 @@
 /.output
 /.vercel
 
----
-
 ## Caching & Development
 /.vite/
+client/frontend/.vite/
 /.cache/
 /coverage/
-
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -25,12 +23,11 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Process IDs and Seeds
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 *.pid
 *.seed
 *.gz
-
----
 
 ## Environment Variables
 .env
@@ -39,8 +36,6 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 .env.development
 .env.production
 .env.test
-
----
 
 ## OS & IDE Configuration
 .DS_Store
@@ -56,11 +51,8 @@ Desktop.ini
 *.sublime-project
 *.sublime-workspace
 
----
-
 ## Database, Documentation & Docker
 # Database scripts and exports
-PostgreSQL.sql
 queriesPLSQL.sql
 
 # Docker configuration
@@ -69,3 +61,8 @@ docker-compose.yml
 # Personal notes and project management
 Tech.txt
 TODO.md
+admin/backend/testing/
+client/backend/testing/
+
+## Redis 
+dump.rdb

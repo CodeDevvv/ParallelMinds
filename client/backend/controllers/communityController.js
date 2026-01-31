@@ -1,7 +1,9 @@
 import { query } from "../config/db";
+import redis from "../config/redis";
 
 import { decryptMessage } from "../utils/encryption";
 import { getUserIdFromToken } from "../utils/generateToken";
+import Redis from "ioredis";
 
 
 export const fetchCommunityData = async (req, res) => {
@@ -92,3 +94,46 @@ export const fetchCommunityData = async (req, res) => {
         return res.status(500).json({ status: false, message: "Internal server error." });
     }
 };
+
+// Whose Online?
+export const handleHeartBeat = async (socket, groupId, userId) => {
+    const pipeline = redis.pipeline()
+
+    // "Online List" for the group
+    pipeline.sadd(`group:${groupId}:online`, userId);
+    console.log(groupId + " "+ userId)
+    // Self destructing key , if no ping for 15 secs , it means user is offline , delete the key
+    pipeline.set(`user:${userId}:status`, "online", "EX", 15);
+
+    await pipeline.exec()
+}
+
+export const getOnlineUserCount = async (groupId) => {
+    const allUsersInGroup = await redis.smembers(`group:${groupId}:online`);
+    if (allUsersInGroup.length === 0) return 0;
+
+    const checkPipeline = redis.pipeline();
+    allUsersInGroup.forEach((userId) => {
+        checkPipeline.exists(`user:${userId}:status`);
+    });
+
+    const results = await checkPipeline.exec();
+
+    let onlineCount = 0;
+    const cleanUpPipeline = redis.pipeline();
+
+    allUsersInGroup.forEach((userId, index) => {
+        const [err, exists] = results[index];
+        if (exists === 1) {
+            onlineCount++;
+        } else {
+            cleanUpPipeline.srem(`group:${groupId}:online`, userId);
+        }
+    });
+
+    if (onlineCount !== allUsersInGroup.length) {
+        cleanUpPipeline.exec();
+    }
+
+    return onlineCount;
+}

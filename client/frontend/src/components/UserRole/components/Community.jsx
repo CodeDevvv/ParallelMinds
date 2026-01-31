@@ -16,11 +16,13 @@ const Community = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [isGroupInfoOpen, setIsGroupInfoOpen] = useState(false);
     const [groupInfo, setGroupInfo] = useState({});
+    const [onlineCount, setOnlineCount] = useState(0)
     const messagesEndRef = useRef(null);
     const { data: userData } = useUserData();
     const socketRef = useRef(null);
     const navigate = useNavigate();
 
+    // Fetch history and group info
     useEffect(() => {
         if (!userData) return;
         const fetchHistoryAndGroupInfo = async () => {
@@ -46,10 +48,11 @@ const Community = () => {
         fetchHistoryAndGroupInfo();
     }, [userData]);
 
+    // Connect socket
     useEffect(() => {
         if (!userData || !userData.group_id) return;
         socketRef.current = io('http://localhost:3000/community', {
-            auth: { group_id: userData.group_id, user_id: userData.id, full_name: userData.full_name },
+            auth: { groupId: userData.group_id, userId: userData.id, name: userData.full_name },
         });
         socketRef.current.on('newMessage', (incomingMessage) => {
             setMessages((prevMessages) => [...prevMessages, incomingMessage]);
@@ -66,10 +69,25 @@ const Community = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
+    // get online count
+    useEffect(() => {
+        if (!userData?.id || !userData?.group_id) return;
+        const heartBeatInterval = setInterval(() => {
+            console.log("Sending Heartbeat...")
+            socketRef.current.emit("heartbeat")
+        }, 10000)
+
+        socketRef.current.on("online_users_count_update", (count) => {
+            setOnlineCount(count)
+        });
+
+        return () => clearInterval(heartBeatInterval)
+    }, [userData?.group_id, userData?.id])
+
     const handleSendMessage = (e) => {
         e.preventDefault();
         if (newMessage.trim() === '') return;
-        
+
         const messageData = {
             message: newMessage,
             created_at: new Date(),
@@ -102,6 +120,9 @@ const Community = () => {
                             <p className="text-xs font-medium text-green-500 dark:text-green-400">
                                 Active
                             </p>
+                            <span className="status-badge">
+                                🟢 {onlineCount} Members Online
+                            </span>
                         </div>
                     </div>
                     <button
